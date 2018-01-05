@@ -217,6 +217,12 @@ bool ESP8266WiFiSTAClass::config(IPAddress local_ip, IPAddress gateway, IPAddres
     if(!WiFi.enableSTA(true)) {
         return false;
     }
+ 
+    if (local_ip == 0U && gateway == 0U && subnet == 0U) {
+        _useStaticIp = false;
+        wifi_station_dhcpc_start();
+        return true;
+    }
 
     //Arduino has a different arg order: ip, dns, gateway, subnet. To allow compatibility, check first octet of 3rd arg. If 255, interpret as ESP order, otherwise Arduino order.
     if(subnet[0] != 255)
@@ -238,12 +244,6 @@ bool ESP8266WiFiSTAClass::config(IPAddress local_ip, IPAddress gateway, IPAddres
     info.ip.addr = static_cast<uint32_t>(local_ip);
     info.gw.addr = static_cast<uint32_t>(gateway);
     info.netmask.addr = static_cast<uint32_t>(subnet);
-
-    if (local_ip == 0U && gateway == 0U && subnet == 0U) {
-        _useStaticIp = false;
-        wifi_station_dhcpc_start();
-        return true;
-    }
 
     wifi_station_dhcpc_stop();
     if(wifi_set_ip_info(STATION_IF, &info)) {
